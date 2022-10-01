@@ -3,7 +3,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { toast } from 'react-toastify';
 import { Component } from 'react';
 
-import fetchImages from './information/apiInfo';
+import fetchImages from './services/api';
 import Searchbar from './components/Searchbar';
 import ImageGallery from './components/ImageGallery';
 import Button from './components/Button';
@@ -44,15 +44,15 @@ class App extends Component {
     this.setState({ openModal: true });
   };
 
+
   scrollToHandler = () => {
     const top = document.documentElement.scrollHeight - 150;
-
-    setTimeout(() => {
-      window.scrollTo({
+    window.scrollTo({
         top,
         behavior: 'smooth',
       });
-    }, 500);
+
+
   };
 
   searchImagesHandler = async () => {
