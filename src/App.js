@@ -102,15 +102,12 @@ class App extends Component {
     return (
       <div className="App">
         <Searchbar onSubmit={this.onSubmitHandler} />
-        {this.state.error ? (
-          <p className="ErrorText">{this.state.error}</p>
-        ) : (
-          <ImageGallery
+        {this.state.error && <p className="ErrorText">{this.state.error}</p>}
+        {this.state.images && <ImageGallery
             images={this.state.images}
             showImageHandler={this.showImageHandler}
             scrollToHandler={this.scrollToHandler}
-          />
-        )}
+          />}    
         {this.state.isLoading && <Loader />}
         {this.state.page < this.maxPages && (
           <Button loadMoreHandler={this.loadMoreHandler} />
