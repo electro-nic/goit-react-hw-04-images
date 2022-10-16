@@ -1,10 +1,10 @@
-import { ProgressBar } from 'react-loader-spinner';
-
+import Spinner from 'react-loader-spinner';
+import 'react-loader-spinner/dist/loader/css/react-spinner-loader.css';
 
 const Loader = () => {
   return (
     <div className="Loader">
-      <ProgressBar height="180"  width="180"  ariaLabel="progress-bar-loading"  wrapperStyle={{}}  wrapperClass="progress-bar-wrapper"  borderColor = '#F4442E'  barColor = '#51E5FF'/>
+      <Spinner type="ThreeDots" color="#00BFFF" height={150} width={150} />
     </div>
   );
 };

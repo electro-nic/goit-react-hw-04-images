@@ -1,127 +1,115 @@
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { toast } from 'react-toastify';
-import { Component } from 'react';
-
-import fetchImages from './services/api';
+import { useState, useEffect } from 'react';
+import fetchImages from './information/apiInfo';
 import Searchbar from './components/Searchbar';
 import ImageGallery from './components/ImageGallery';
 import Button from './components/Button';
 import Loader from './components/Loader';
 import Modal from './components/Modal';
 
-class App extends Component {
-  state = {
-    images: [],
-    searchItem: '',
-    page: 1,
-    isLoading: false,
-    openModal: false,
-    error: '',
+let maxPages = 0;
+let largeImgURL = '';
+
+function App() {
+  const [images, setImages] = useState([]);
+  const [searchItem, setSearchItem] = useState('');
+  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(
+    prevState => {
+      if (searchItem === '') {
+        return;
+      } else if (
+        (prevState !== searchItem && searchItem !== '') ||
+        prevState !== page
+      ) {
+        searchImagesHandler();
+      }
+    },
+    // eslint-disable-next-line
+    [searchItem, page],
+  );
+
+  const closeModal = () => {
+    largeImgURL = '';
+    setOpenModal(false);
   };
 
-  maxPages = 0;
-  largeImgURL = '';
-  newElementHight = 0;
-
-  componentDidUpdate(prevProps, prevState) {
-    if (
-      (prevState.searchItem !== this.state.searchItem &&
-        this.state.searchItem !== '') ||
-      prevState.page !== this.state.page
-    ) {
-      this.searchImagesHandler();
-    }
-  }
-
-  closeModal = () => {
-    this.largeImgURL = '';
-    this.setState({ openModal: false });
+  const showImageHandler = imageUrl => () => {
+    largeImgURL = imageUrl;
+    setOpenModal(true);
   };
 
-  showImageHandler = imageUrl => () => {
-    this.largeImgURL = imageUrl;
-    this.setState({ openModal: true });
-  };
-
-
-  scrollToHandler = () => {
+  const scrollToHandler = () => {
     const top = document.documentElement.scrollHeight - 150;
-    window.scrollTo({
+
+    setTimeout(() => {
+      window.scrollTo({
         top,
         behavior: 'smooth',
       });
-
-
+    }, 500);
   };
 
-  searchImagesHandler = async () => {
-    const { searchItem, page } = this.state;
-    this.setState({ isLoading: true, error: '' });
+  const searchImagesHandler = async () => {
+    setIsLoading(true);
+    setError('');
     try {
       const result = await fetchImages(searchItem, page);
 
       if (result.total !== 0) {
-        this.maxPages = Math.ceil(result.totalHits / 12);
+        maxPages = Math.ceil(result.totalHits / 12);
 
-        this.setState(({ images }) => ({
-          images: [...images, ...result.hits],
-        }));
+        setImages(prevState => [...prevState, ...result.hits]);
       } else {
         toast.info(`Nothing found for ${searchItem}!`);
-        this.setState(() => ({
-          images: [],
-        }));
+        setImages([]);
       }
     } catch (error) {
       console.error(error);
-      this.setState(() => ({ error: error.toString() }));
+      setError(error.toString());
     } finally {
-      this.setState({ isLoading: false });
+      setIsLoading(false);
     }
   };
 
-  loadMoreHandler = () => {
-    this.scrollToHandler();
-    this.setState(() => ({
-      page: Math.min(this.maxPages, this.state.page + 1),
-    }));
+  const loadMoreHandler = () => {
+    scrollToHandler();
+    setPage(Math.min(maxPages, page + 1));
   };
 
-  onSubmitHandler = searchString => {
-    this.maxPages = 0;
-
-    this.setState(() => ({
-      images: [],
-      searchItem: searchString,
-      page: 1,
-    }));
+  const onSubmitHandler = searchString => {
+    maxPages = 0;
+    setImages([]);
+    setSearchItem(searchString);
+    setPage(1);
   };
 
-  render() {
-    return (
-      <div className="App">
-        <Searchbar onSubmit={this.onSubmitHandler} />
-        {this.state.error && <p className="ErrorText">{this.state.error}</p>}
-        {this.state.images && <ImageGallery
-            images={this.state.images}
-            showImageHandler={this.showImageHandler}
-            scrollToHandler={this.scrollToHandler}
-          />}    
-        {this.state.isLoading && <Loader />}
-        {this.state.page < this.maxPages && (
-          <Button loadMoreHandler={this.loadMoreHandler} />
-        )}
-        {this.state.openModal && (
-          <Modal
-            largeImgURL={this.largeImgURL}
-            onClose={this.closeModal}
-          ></Modal>
-        )}
-        <ToastContainer autoClose={2000} />
-      </div>
-    );
-  }
+  return (
+    <div className="App">
+      <Searchbar onSubmit={onSubmitHandler} />
+      {error ? (
+        <p className="ErrorText">{error}</p>
+      ) : (
+        <ImageGallery
+          images={images}
+          showImageHandler={showImageHandler}
+          scrollToHandler={scrollToHandler}
+        />
+      )}
+      {isLoading && <Loader />}
+      {images.length >= 11 && <Button loadMoreHandler={loadMoreHandler} />}
+      {openModal && (
+        <Modal largeImgURL={largeImgURL} onClose={closeModal}></Modal>
+      )}
+      <ToastContainer autoClose={2000} />
+    </div>
+  );
 }
 
 export default App;
